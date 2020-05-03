@@ -2,12 +2,16 @@
 #set -x
 #shellcheck disable=SC2039
 #shellcheck disable=SC2143
-SERVERLIST="at,be,ch,cz,de,es,gb,lv,nl,no,rs,se"
+
+#check if serverlist file exists and use it
+[ -f "AirVPN.servers" ] && source "AirVPN.servers" || printf "#List separated by commas\nSERVERLIST=\"gb,us,jp\"\n" > "AirVPN.servers"
+
 
 if [ -z "$1" ] && [ -z "$2" ]; then
      echo "Missing Args"
      echo "Syntax: AirVPN arg clientnumber"
      echo "Args: toggle (1-5), status (1-5), random (1-5), set (1-5) (Country-Code ALPHA-2 ISO3166)[entry-ip]"
+     echo "Example: AirVPN set 2 gb3"
      exit 1
 elif [ -n "$1" ] && [ -z "$2" ]; then
      echo "Missing VPN Client number"
