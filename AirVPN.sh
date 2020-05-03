@@ -2,10 +2,8 @@
 #set -x
 #shellcheck disable=SC2039
 #shellcheck disable=SC2143
-
 SERVERLIST="at,be,ch,cz,de,es,gb,lv,nl,no,rs,se"
-CURRENTSERVER="$(nvram get vpn_client"$VPN"_addr)"
-CURRENTDESC="$(nvram get vpn_client"$VPN"_desc)"
+
 
 if [ -z "$1" ] && [ -z "$2" ]; then
      echo "Missing Args"
@@ -24,14 +22,15 @@ elif [ "$1" = "set" ] && [ -z "$3" ]; then
 else
      ARG="$1"
      VPN="$2"
-     SRV="$(echo "$3" | tr 'A-Z a-z' | sed -e 's/[0-9]//g'")"
+     CURRENTSERVER="$(nvram get vpn_client"$VPN"_addr)"
+     CURRENTDESC="$(nvram get vpn_client"$VPN"_desc)"
+     SRV="$(echo "$3" | tr 'A-Z a-z' | sed -e 's/[0-9]//g')"
      if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" ]; then
           ENTRY="$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')"
           echo "$CURRENTDESC: Forcing entry-ip $ENTRY to avoid connecting issues"
      else
           ENTRY="$(echo "$3" | grep -o -E '[0-9]+')"
      fi
-     SRV="$SRV$ENTRY"
 fi
 
 if [ "$ARG" = "set" ] && [ "$(ping -c 1 "$SRV".vpn.airdns.org >/dev/null 2>&1 ; echo $?)" != "0" ]; then
@@ -41,11 +40,11 @@ fi
 
 #remove current server from serverlist
 SERVERLIST="$(echo "$SERVERLIST" | sed -e "s/""$(echo "$CURRENTSERVER" | cut -d. -f1 | sed -e "s/[0-9]//g")""//g" -e "s/,,/,/g" -e "s/^,//g" -e "s/,$//g")"
-
+exit
 if [[ "$ARG" = "set" || "$ARG" = "random" ]] && [[ -z "$SRV" || "$SRV" = "BADADDR" ]]; then
-     NEWSERVER="$(echo "$SERVERLIST" | cut -d "," -f"$(awk -v min=1 -v max="$(echo "$SERVERLIST" | sed "s/,/ /g" | wc -w)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')").vpn.airdns.org"
+     NEWSERVER="$(echo "$SERVERLIST" | cut -d "," -f"$(awk -v min=1 -v max="$(echo "$SERVERLIST" | sed "s/,/ /g" | wc -w)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')")$ENTRY.vpn.airdns.org"
 else
-     NEWSERVER="$SRV.vpn.airdns.org"
+     NEWSERVER="$SRV$ENTRY.vpn.airdns.org"
 fi
 
 if [ "$ARG" = "toggle" ]; then
