@@ -24,7 +24,7 @@ else
      CURRENTSERVER="$(nvram get vpn_client"$VPN"_addr)"
      CURRENTDESC="$(nvram get vpn_client"$VPN"_desc)"
      SRV="$(echo "$3" | tr 'A-Z a-z' | sed -e 's/[0-9]//g')"
-     if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" ] && [ "$ARG" != "status" ]; then
+     if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" ] && [ "$ARG" != "status" ] && [ "$ARG" != "toggle" ]; then
           ENTRY="$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')"
           echo "$CURRENTDESC: Forcing entry-ip $ENTRY to avoid connecting issues"
      else
