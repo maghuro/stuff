@@ -4,7 +4,6 @@
 #shellcheck disable=SC2143
 SERVERLIST="at,be,ch,cz,de,es,gb,lv,nl,no,rs,se"
 
-
 if [ -z "$1" ] && [ -z "$2" ]; then
      echo "Missing Args"
      echo "Syntax: AirVPN arg clientnumber"
@@ -40,7 +39,7 @@ fi
 
 #remove current server from serverlist
 SERVERLIST="$(echo "$SERVERLIST" | sed -e "s/""$(echo "$CURRENTSERVER" | cut -d. -f1 | sed -e "s/[0-9]//g")""//g" -e "s/,,/,/g" -e "s/^,//g" -e "s/,$//g")"
-exit
+
 if [[ "$ARG" = "set" || "$ARG" = "random" ]] && [[ -z "$SRV" || "$SRV" = "BADADDR" ]]; then
      NEWSERVER="$(echo "$SERVERLIST" | cut -d "," -f"$(awk -v min=1 -v max="$(echo "$SERVERLIST" | sed "s/,/ /g" | wc -w)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')")$ENTRY.vpn.airdns.org"
 else
