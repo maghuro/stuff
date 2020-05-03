@@ -2,10 +2,10 @@
 #set -x
 #shellcheck disable=SC2039
 #shellcheck disable=SC2143
+SERVERSFILE="$0"".servers"
+SERVERSPATH="$(cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/$SERVERSFILE"
 
-#check if serverlist file exists and use it
-[ -f "AirVPN.servers" ] && source "AirVPN.servers" || printf "#List separated by commas\nSERVERLIST=\"gb,us,jp\"\n" > "AirVPN.servers"
-
+[ -f "$SERVERSPATH" ] && source "$SERVERSPATH" || printf "#List separated by commas\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
 
 if [ -z "$1" ] && [ -z "$2" ]; then
      echo "Missing Args"
