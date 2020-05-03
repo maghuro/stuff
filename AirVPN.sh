@@ -2,8 +2,7 @@
 #set -x
 #shellcheck disable=SC2039
 #shellcheck disable=SC2143
-SERVERSFILE="$0"".servers"
-SERVERSPATH="$(cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )/$SERVERSFILE"
+SERVERSPATH="$0"".servers"
 
 #check if serverlist file exists and use it
 [ -f "$SERVERSPATH" ] && source "$SERVERSPATH" || printf "#List separated by commas\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
