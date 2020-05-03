@@ -32,7 +32,7 @@ else
      fi
 fi
 
-if [ "$ARG" = "set" ] && [ "$(ping -c 1 "$SRV".vpn.airdns.org >/dev/null 2>&1 ; echo $?)" != "0" ]; then
+if [ "$ARG" = "set" ] && [ "$(ping -c 1 "$SRV$ENTRY".vpn.airdns.org >/dev/null 2>&1 ; echo $?)" != "0" ]; then
      echo "$CURRENTDESC: Bad address... Using random from list"
      SRV="BADADDR"
 fi
