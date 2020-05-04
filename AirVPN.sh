@@ -1,38 +1,14 @@
-#!/bin/sh
-#set -x
-#shellcheck disable=SC2039
-#shellcheck disable=SC2143
-SERVERSPATH="$0"".servers"
-
-#check if serverlist file exists and use it
-[ -f "$SERVERSPATH" ] && source "$SERVERSPATH" || printf "#List separated by commas\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
-
-if [ -z "$1" ] && [ -z "$2" ]; then
-     echo "Missing Args"
-     echo "Syntax: AirVPN arg clientnumber"
-     echo "Args: toggle (1-5), status (1-5), random (1-5), set (1-5) (Country-Code ALPHA-2 ISO3166)[entry-ip]"
-     echo "Example: AirVPN set 2 gb3"
-     exit 1
-elif [ -n "$1" ] && [ -z "$2" ]; then
-     echo "Missing VPN Client number"
-     exit 1
-elif [ "$2" -lt 1 ] || [ "$2" -gt 5 ]; then
-     echo "VPN Client number must be between [1-5]"
-     exit 1
-elif [ "$1" = "set" ] && [ -z "$3" ]; then
-     echo "Missing ALPHA-2 ISO3166 country code for manually setting"
-     exit 1
-else
-     ARG="$1"
-     VPN="$2"
-     CURRENTSERVER="$(nvram get vpn_client"$VPN"_addr)"
-     CURRENTDESC="$(nvram get vpn_client"$VPN"_desc)"
-     SRV="$(echo "$3" | tr 'A-Z a-z' | sed -e 's/[0-9]//g')"
-     if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" ] && [ "$ARG" != "status" ] && [ "$ARG" != "toggle" ]; then
-          ENTRY="$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')"
-          echo "$CURRENTDESC: Forcing entry-ip $ENTRY to avoid connecting issues"
+#!/bin/sh                                                                 set -x                                                                    #shellcheck disable=SC2039                                                #shellcheck disable=SC2143                                                SERVERSPATH="$0"".servers"                                                                                                                          #check if serverlist file exists and use it                               [ -f "$SERVERSPATH" ] && source "$SERVERSPATH" || printf "#List separated by commas\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"                                                                                              if [ -z "$1" ] && [ -z "$2" ]; then                                            echo "Missing Args"                                                       echo "Syntax: AirVPN arg clientnumber"                                    echo "Args: toggle (1-5), restart (1-5), status (1-5), random (1-5), set (1-5) (Country-Code ALPHA-2 ISO3166)[entry-ip]"                            echo "Example: AirVPN set 2 gb3"                                          exit 1                                                               elif [ -n "$1" ] && [ -z "$2" ]; then                                          echo "Missing VPN Client number"                                          exit 1                                                               elif [ "$2" -lt 1 ] || [ "$2" -gt 5 ]; then                                    echo "VPN Client number must be between [1-5]"                            exit 1                                                               elif [ "$1" = "set" ] && [ -z "$3" ]; then                                     echo "Missing ALPHA-2 ISO3166 country code for manually setting"          exit 1                                                               else                                                                           ARG="$1"                                                                  VPN="$2"                                                                  CURRENTSERVER="$(nvram get vpn_client"$VPN"_addr)"                        CURRENTDESC="$(nvram get vpn_client"$VPN"_desc)"                          SRV="$(echo "$3" | tr 'A-Z a-z' | sed -e 's/[0-9]//g')"
+     if [ -z $CURRENTSERVER" ]; then
+          ARG="random"
+          echo "$CURRENTDESC: ERROR! There's no server defined. Randomizing one..."
      else
-          ENTRY="$(echo "$3" | grep -o -E '[0-9]+')"
+         if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" ] && [ "$ARG" != "status" ] && [ "$ARG" != "toggle" ]; then
+             ENTRY="$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')"
+             echo "$CURRENTDESC: Forcing entry-ip $ENTRY to avoid connecting issues"
+         else
+             ENTRY="$(echo "$3" | grep -o -E '[0-9]+')"
+         fi
      fi
 fi
 
@@ -58,6 +34,14 @@ if [ "$ARG" = "toggle" ]; then
         service start_vpnclient"$VPN" >/dev/null 2>&1
         echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 5 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
     fi
+elif [ "$ARG" = "restart" ]; then
+     if [ -f "etc/openvpn/client$VPN/status" ]; then
+        service restart_vpnclient"$VPN" >/dev/null 2>&1
+        echo "$CURRENTDESC: VPN restarting...."
+     else
+        service start_vpnclient"$VPN" >/dev/null 2>&1
+        echo "$CURRENTDESC: VPN is off, starting..."
+     fi
 elif [ "$ARG" = "status" ]; then
      if [ -f "/etc/openvpn/client$VPN/status" ]; then
         echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 5 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
