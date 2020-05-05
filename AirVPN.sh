@@ -3,7 +3,7 @@
 #shellcheck disable=SC2039
 #shellcheck disable=SC2143
 #shellcheck source=/dev/null
-SERVERSPATH="$0"".servers"
+SERVERSPATH="$0.servers"
 
 #check if serverlist file exists and use it
 [ -f "$SERVERSPATH" ] && source "$SERVERSPATH" || printf "#List separated by commas, can be earth, continent (ex europe), country (ex gb), or country-ipentry pair (ex gb3)\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
@@ -11,8 +11,9 @@ SERVERSPATH="$0"".servers"
 if [ -z "$1" ] && [ -z "$2" ]; then
      echo "Missing Args"
      echo "Syntax: AirVPN arg clientnumber"
-     echo "Args: toggle (1-5), restart (1-5), status (1-5), random (1-5), set (1-5) (Country-Code ALPHA-2 ISO3166)[entry-ip]"
+     echo "Args: toggle (1-5), restart (1-5), status (1-5), random (1-5), set (1-5) (server)[entry-ip]"
      echo "Example: AirVPN set 2 gb3"
+     echo "Server examples: gb, at3, europe, asia2, earth"
      exit 1
 elif [ -n "$1" ] && [ -z "$2" ]; then
      echo "Missing VPN Client number"
