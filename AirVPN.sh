@@ -66,7 +66,7 @@ if [ "$ARG" = "toggle" ]; then
         echo "$CURRENTDESC: OFF ($CURRENTSERVER)"
     else
         service start_vpnclient"$VPN" >/dev/null 2>&1
-        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 5 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
+        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 4 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
     fi
 elif [ "$ARG" = "restart" ]; then
      if [ -f "/etc/openvpn/client$VPN/status" ]; then
@@ -78,7 +78,7 @@ elif [ "$ARG" = "restart" ]; then
      fi
 elif [ "$ARG" = "status" ]; then
      if [ -f "/etc/openvpn/client$VPN/status" ]; then
-        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 5 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
+        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 4 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
      else
         echo "$CURRENTDESC: OFF ($CURRENTSERVER)"
      fi
@@ -94,7 +94,7 @@ elif [ "$ARG" = "random" ] || [ "$ARG" = "set" ]; then
           WINNER="$(echo "$SERVERLIST" | sed -e "s|$SRV|$(echo -e \\e[5m\\e[1m\\e[32m\\e[31m"$SRV"\\e[0m)|g")"
           [ "$ARG" = "random" ] && echo "$CURRENTDESC: And the winner is... ""$WINNER"
           [ "$ARG" = "set" ] && echo "$CURRENTDESC: Setting server...  ""$WINNER"
-          echo "$CURRENTDESC: Server changed to $NEWSERVER ($(ping -c 5 "$NEWSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
+          echo "$CURRENTDESC: Server changed to $NEWSERVER ($(ping -c 4 "$NEWSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
      fi
 else
     echo "Error! Bad arguments..."
