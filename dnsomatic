@@ -110,7 +110,7 @@ else
         if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
             if [ "$1" = "force" ]; then
                Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
-            elif [ -z "$CURRENTIP" ] || [ "$1" = "init" ]; then
+            elif [ -z "$CURRENTIP" ]; then
                Print_Output "Updating IP to $NEWIP/$NEWCOUNTRY" "$PASS"
             else
                Print_Output "Updating IP from $CURRENTIP/$CURRENTCOUNTRY to $NEWIP/$NEWCOUNTRY" "$PASS"
