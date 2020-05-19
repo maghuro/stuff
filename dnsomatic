@@ -1,0 +1,134 @@
+#!/bin/sh
+#shellcheck disable=SC2018
+#shellcheck disable=SC2019
+#shellcheck source=/dev/null
+#DNS-O-MATIC updater by maghuro 2020
+APPNAME="DNSOMatic"
+CFG="/jffs/configs/.dnsomatic.cfg"
+readonly CRIT="\\e[41m"
+readonly ERR="\\e[31m"
+readonly WARN="\\e[33m"
+readonly PASS="\\e[32m"
+
+#set -x
+
+if [ ! -f "$CFG" ]; then
+   printf "" > "$CFG"
+fi
+. "$CFG"
+
+# $1 = message to print, $2 = log level \\\ Thanks JackYaz
+Print_Output(){
+	logger -t "$APPNAME" "$1"
+	printf "\\e[1m$2%s: $1\\e[0m\\n" "$APPNAME"
+}
+
+#set vars / $1 = var name, $2 = value
+setvar(){
+    grep -q "$1=" < "$CFG" || printf "%s=\"\"\n" "$1" >> "$CFG"
+    sed -i "s/^$1=.*$/$1=\"$(echo "$2" | tr -d " ")\"/" "$CFG"
+    . "$CFG"
+}
+
+if [ "$1" = "config" ]; then
+    cat "$CFG"
+    exit 0
+fi
+
+if [ "$1" = "set" ]; then
+    if [ -n "$2" ] && [ -n "$3" ]; then
+       setvar "$2" "$3"
+       Print_Output "Setting $(echo "$2" | tr -d " ")=$(echo "$3" | tr -d " ")..."
+       exit 0
+    else
+       echo "Missing args"
+       exit 1
+    fi
+fi
+
+missing=0
+for vars in USERNAME PASSWORD HOSTNAME; do
+    if ! grep -q "$vars=" < "$CFG"; then
+       missing=1
+       Print_Output "Please use \"$(echo $APPNAME | tr 'A-Z' 'a-z') set $vars VALUE\" before first run" "$CRIT"
+    fi
+done
+[ $missing = 1 ] && exit 1
+
+#check if curl and jq exists
+for app in curl jq; do
+  if ! (which "$app" >/dev/null 2>&1); then
+      Print_Output "$app not found, installing..." "$CRIT"
+      opkg install "$app" >/dev/null 2>&1
+  fi
+done
+
+if [ "$1" = "cron" ]; then
+   [ ! -f "/opt/bin/$(echo $APPNAME | tr 'A-Z' 'a-z')" ] && ln -s "$0" "/opt/bin/$(echo $APPNAME | tr 'A-Z' 'a-z')" >/dev/null 2>&1
+   if [ -z "$2" ] && [ -z "$RUNEACH" ]; then
+      Print_Output "Please use \"$(echo $APPNAME | tr 'A-Z' 'a-z') cron X\" where X is the number in minutes for cronjob" "$ERR"
+      exit 1
+   elif [ -n "$2" ]; then
+      setvar RUNEACH "$2"
+   fi
+   cru a "$APPNAME" "*/${RUNEACH} * * * * ${0}"
+   Print_Output "Creating cronjob to run every $RUNEACH minutes..." "$WARN"
+   setvar CURRENTIP ""
+   setvar CURRENTCOUNTRY ""
+   exit 0
+fi
+
+if [ "$1" = "init" ]; then
+   [ ! -f "/opt/bin/$(echo $APPNAME | tr 'A-Z' 'a-z')" ] && ln -s "$0" "/opt/bin/$(echo $APPNAME | tr 'A-Z' 'a-z')" >/dev/null 2>&1
+   Print_Output "Waiting 30 sec for first update..." "$WARN"
+   sleep 30s
+fi
+
+if [ "$1" = "force" ]; then
+   setvar CURRENTIP ""
+   setvar CURRENTCOUNTRY ""
+fi
+
+if [ -n "$2" ]; then
+   NEWIP="$2"
+   NEWCOUNTRY="$(echo "$3" | tr 'a-z' 'A-Z')"
+else
+    AIRVPN="$(curl -fs4 --retry 8 https://airvpn.org/api/whatismyip/)"
+   	NEWIP="$(jq -n "$AIRVPN" | jq -j .ip)"
+   	NEWCOUNTRY="$(jq -n "$AIRVPN" | jq -j .geo.code | tr 'a-z' 'A-Z')"
+fi
+
+[ -z "$NEWCOUNTRY" ] && NEWCOUNTRY="EARTH"
+
+if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
+    setvar CURRENTIP ""
+    setvar CURRENTCOUNTRY ""
+    Print_Output "Can't retrieve IP Address, stopping..." "$ERR"
+else
+     if [ "$NEWIP" != "$CURRENTIP" ]; then
+        UPDATE="$(curl -fs4 --retry 8 -u $USERNAME:$PASSWORD https://updates.dnsomatic.com/nic/update?hostname=$HOSTNAME\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip=$NEWIP)"
+        if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
+            if [ "$1" = "force" ]; then
+               Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
+            elif [ -z "$CURRENTIP" ] || [ "$1" = "init" ]; then
+               Print_Output "Updating IP to $NEWIP/$NEWCOUNTRY" "$PASS"
+            else
+               Print_Output "Updating IP from $CURRENTIP/$CURRENTCOUNTRY to $NEWIP/$NEWCOUNTRY" "$PASS"
+            fi
+            setvar CURRENTIP "$NEWIP"
+            setvar CURRENTCOUNTRY "$NEWCOUNTRY"
+        elif [ "$UPDATE" = "abuse" ]; then
+            setvar CURRENTIP ""
+            setvar CURRENTCOUNTRY ""
+            Print_Output "Abusing! Nothing updated. Next update will be forced" "$ERR"
+        else
+            setvar CURRENTIP ""
+            setvar CURRENTCOUNTRY ""
+            Print_Output "Error while updating: \"$UPDATE\". Next update will be forced" "$ERR"
+        fi
+   # else
+   #     Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
+    fi
+fi
+
+exit 0
