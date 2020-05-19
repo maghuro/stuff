@@ -107,6 +107,8 @@ if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
 else
      if [ "$NEWIP" != "$CURRENTIP" ]; then
         UPDATE="$(curl -fs4 --retry 8 -u $USERNAME:$PASSWORD https://updates.dnsomatic.com/nic/update?hostname=$HOSTNAME\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip=$NEWIP)"
+		#if you need to curl another url to update another service, you can do it here, for example:
+		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
         if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
             if [ "$1" = "force" ]; then
                Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
