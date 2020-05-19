@@ -4,7 +4,7 @@
 #shellcheck source=/dev/null
 #DNS-O-MATIC updater by maghuro 2020
 APPNAME="DNSOMatic"
-CFG="/jffs/configs/.dnsomatic.cfg"
+CFG="/jffs/addons/$(echo $APPNAME | tr 'A-Z' 'a-z').d/settings.cfg"
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
