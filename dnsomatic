@@ -5,7 +5,8 @@
 #DNS-O-MATIC updater by maghuro 2020
 APPNAME="DNSOMatic"
 APPNAMEnorm="$(echo $APPNAME | tr 'A-Z' 'a-z')"
-CFG="/jffs/addons/$APPNAMEnorm.d/settings.cfg"
+CFGdir="/jffs/addons/$APPNAMEnorm.d"
+CFG="${CFGdir}/settings.cfg"
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
@@ -16,7 +17,11 @@ readonly PASS="\\e[32m"
 [ -f "/opt/bin/$APPNAMEnorm" ] || ln -s "$0" "/opt/bin/$APPNAMEnorm" >/dev/null 2>&1
  
 if [ ! -f "$CFG" ]; then
-   printf "" > "$CFG"
+    if [ ! -d "$CFGdir" ]; then
+       mkdir "$CFGdir"
+       chmod 777 "$CFGdir"
+    fi
+    printf "" > "$CFG"
 fi
 . "$CFG"
 
@@ -115,8 +120,8 @@ if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
 else
      if [ "$NEWIP" != "$CURRENTIP" ]; then
         UPDATE="$(curl -fs4 --retry 8 -u $USERNAME:$PASSWORD https://updates.dnsomatic.com/nic/update?hostname=$HOSTNAME\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip=$NEWIP)"
-	#if you need to curl another url to update another service, you can do it here, for example:
-	#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
+		#if you need to curl another url to update another service, you can do it here, for example:
+		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
         if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
             if [ "$1" = "force" ]; then
                Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
