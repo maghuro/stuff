@@ -5,7 +5,7 @@
 #DNS-O-MATIC updater by maghuro 2020
 APPNAME="DNSOMatic"
 APPNAMEnorm="$(echo $APPNAME | tr 'A-Z' 'a-z')"
-CFG="/jffs/addons/$(echo $APPNAME | tr 'A-Z' 'a-z').d/settings.cfg"
+CFG="/jffs/addons/$(echo $APPNAMEnorm | tr 'A-Z' 'a-z').d/settings.cfg"
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
