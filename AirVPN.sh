@@ -6,10 +6,14 @@
 SERVERSPATH="$0.servers"
 
 #check if serverlist file exists and use it
-[ -f "$SERVERSPATH" ] && source "$SERVERSPATH" || printf "#List separated by commas, can be earth, continent (ex europe), country (ex gb), or country-ipentry pair (ex gb3)\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
-
+if [ -f "$SERVERSPATH" ]; then
+     source "$SERVERSPATH"
+else
+     printf "#List separated by commas, can be earth, continent (ex europe), country (ex gb), or country-ipentry pair (ex gb3)\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
+     echo "File \"$0.servers\" created. Please modify it as you wish"
+fi
 if [ -z "$1" ] && [ -z "$2" ]; then
-     echo "Missing Args"
+#     echo "Missing Args"
      echo "Syntax: AirVPN arg clientnumber"
      echo "Args: toggle (1-5), restart (1-5), status (1-5), random (1-5), set (1-5) (server)[entry-ip]"
      echo "Example: AirVPN set 2 gb3"
@@ -45,7 +49,7 @@ else
      fi
 fi
 
-if [ "$ARG" = "set" ] && [ "$(ping -I eth0 -c 1 "$SRV$ENTRY".vpn.airdns.org >/dev/null 2>&1 ; echo $?)" != "0" ]; then
+if [ "$ARG" = "set" ] && [ "$(ping -c 1 "$SRV$ENTRY".vpn.airdns.org >/dev/null 2>&1 ; echo $?)" != "0" ]; then
      echo "$CURRENTDESC: Bad address... Using random from list"
      SRV="BADADDR"
 fi
@@ -66,7 +70,7 @@ if [ "$ARG" = "toggle" ]; then
         echo "$CURRENTDESC: OFF ($CURRENTSERVER)"
     else
         service start_vpnclient"$VPN" >/dev/null 2>&1
-        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -I eth0 -c 5 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
+        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 4 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
     fi
 elif [ "$ARG" = "restart" ]; then
      if [ -f "/etc/openvpn/client$VPN/status" ]; then
@@ -78,7 +82,7 @@ elif [ "$ARG" = "restart" ]; then
      fi
 elif [ "$ARG" = "status" ]; then
      if [ -f "/etc/openvpn/client$VPN/status" ]; then
-        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -I eth0 -c 5 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
+        echo "$CURRENTDESC: ON ($CURRENTSERVER) ($(ping -c 4 "$CURRENTSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
      else
         echo "$CURRENTDESC: OFF ($CURRENTSERVER)"
      fi
@@ -91,10 +95,11 @@ elif [ "$ARG" = "random" ] || [ "$ARG" = "set" ]; then
           if [ -f "/etc/openvpn/client$VPN/status" ]; then
                service restart_vpnclient"$VPN" >/dev/null 2>&1
           fi
+          ! echo "$SERVERLIST" | grep -q "$SRV" && SERVERLIST="$SRV,$SERVERLIST"
           WINNER="$(echo "$SERVERLIST" | sed -e "s|$SRV|$(echo -e \\e[5m\\e[1m\\e[32m\\e[31m"$SRV"\\e[0m)|g")"
           [ "$ARG" = "random" ] && echo "$CURRENTDESC: And the winner is... ""$WINNER"
           [ "$ARG" = "set" ] && echo "$CURRENTDESC: Setting server...  ""$WINNER"
-          echo "$CURRENTDESC: Server changed to $NEWSERVER ($(ping -I eth0 -c 5 "$NEWSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
+          echo "$CURRENTDESC: Server changed to $NEWSERVER ($(ping -c 4 "$NEWSERVER" | tail -1 | awk '{print $4}' | cut -d '/' -f 2) ms)"
      fi
 else
     echo "Error! Bad arguments..."
