@@ -10,7 +10,7 @@ if [ -f "$SERVERSPATH" ]; then
      source "$SERVERSPATH"
 else
      printf "#List separated by commas, can be earth, continent (ex europe), country (ex gb), or country-ipentry pair (ex gb3)\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
-     echo "File \"$0.servers\" created. Please modify it as you wish"
+     echo "File \"$SERVERSPATH\" created. Please modify it as you wish"
 fi
 if [ -z "$1" ] && [ -z "$2" ]; then
 #     echo "Missing Args"
