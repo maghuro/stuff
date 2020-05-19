@@ -61,7 +61,7 @@ if [[ "$ARG" = "set" || "$ARG" = "random" ]] && [[ -z "$SRV" || "$SRV" = "BADADD
      SRV="$(echo "$SERVERLIST" | cut -d "," -f"$(awk -v min=1 -v max="$(echo "$SERVERLIST" | sed "s/,/ /g" | wc -w)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')")"
      NEWSERVER="$SRV""$ENTRY"".vpn.airdns.org"
 else
-     NEWSERVER="$SRV$ENTRY.vpn.airdns.org"
+     NEWSERVER="$SRV""$ENTRY"".vpn.airdns.org"
 fi
 
 if [ "$ARG" = "toggle" ]; then
