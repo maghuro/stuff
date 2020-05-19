@@ -55,8 +55,12 @@ if [ "$1" = "set" ]; then
 fi
 
 if [ "$ABUSE" = "1" ]; then
-   setvar ABUSE 0
+   setvar ABUSE 2
    Print_Output "Last update was abusive, skipping this one..."
+   exit 0
+elif [ "$ABUSE" = "2" ]; then
+   setvar ABUSE 0
+   Print_Output "Last update was abusive, skipping this one also..."
    exit 0
 fi
 
@@ -136,7 +140,7 @@ else
             setvar CURRENTIP ""
             setvar CURRENTCOUNTRY ""
 	    setvar ABUSE 1
-            Print_Output "Abusing! Nothing updated. Next cron will be skipped and next update forced" "$ERR"
+            Print_Output "Abusing! Nothing updated. Next two crons will be skipped and next update forced" "$ERR"
         else
             setvar CURRENTIP ""
             setvar CURRENTCOUNTRY ""
