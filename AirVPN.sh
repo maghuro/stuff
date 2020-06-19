@@ -10,10 +10,9 @@ if [ -f "$SERVERSPATH" ]; then
      source "$SERVERSPATH"
 else
      printf "#List separated by commas, can be earth, continent (ex europe), country (ex gb), or country-ipentry pair (ex gb3)\nSERVERLIST=\"gb,us,jp\"\n" > "$SERVERSPATH"
-     echo "File \"$SERVERSPATH\" created. Please modify it as you wish"
+     echo "File \"$0.servers\" created. Please modify it as you wish"
 fi
 if [ -z "$1" ] && [ -z "$2" ]; then
-#     echo "Missing Args"
      echo "Syntax: AirVPN arg clientnumber"
      echo "Args: toggle (1-5), restart (1-5), status (1-5), random (1-5), set (1-5) (server)[entry-ip]"
      echo "Example: AirVPN set 2 gb3"
@@ -61,7 +60,7 @@ if [[ "$ARG" = "set" || "$ARG" = "random" ]] && [[ -z "$SRV" || "$SRV" = "BADADD
      SRV="$(echo "$SERVERLIST" | cut -d "," -f"$(awk -v min=1 -v max="$(echo "$SERVERLIST" | sed "s/,/ /g" | wc -w)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')")"
      NEWSERVER="$SRV""$ENTRY"".vpn.airdns.org"
 else
-     NEWSERVER="$SRV""$ENTRY"".vpn.airdns.org"
+     NEWSERVER="$SRV$ENTRY.vpn.airdns.org"
 fi
 
 if [ "$ARG" = "toggle" ]; then
