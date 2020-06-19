@@ -71,13 +71,17 @@ for vars in USERNAME PASSWORD HOSTNAME; do
        Print_Output "Please use \"$APPNAMEnorm set $vars your_$(echo $vars | tr 'A-Z' 'a-z')\" before first run" "$CRIT"
     fi
 done
-[ $missing = 1 ] && exit 1
+[ "$missing" = 1 ] && exit 1
 
 #check if curl (for the sake of...) and jq exists
 for app in curl jq; do
   if ! (which "$app" >/dev/null 2>&1); then
       Print_Output "$app not found, installing..." "$CRIT"
       opkg install "$app" >/dev/null 2>&1
+      if ! (which "$app" >/dev/null 2>&1); then
+        Print_Output "Can't download $app, exiting as it is required..." "$CRIT"
+        exit 1
+      fi
   fi
 done
 
@@ -152,7 +156,7 @@ else
             Print_Output "Error while updating: \"$UPDATE\". Next update will be forced" "$ERR"
         fi
     else
-        [ $PRINTNOTH = 1 ] && Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
+        [ "$PRINTNOTH" = 1 ] && Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
     fi
 fi
 
