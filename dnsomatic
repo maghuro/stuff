@@ -96,7 +96,7 @@ if [ "$1" = "cron" ]; then
 fi
 
 if [ "$1" = "init" ]; then
-   Print_Output "Waiting 30 sec for first update..." "$WARN"
+   Print_Output "Waiting 30 sec for first check..." "$WARN"
    sleep 30s
 fi
 
@@ -109,7 +109,7 @@ if [ -n "$2" ]; then
    NEWIP="$2"
    NEWCOUNTRY="$(echo "$3" | tr 'a-z' 'A-Z')"
 else
-   AIRVPN="$(curl -fs4 --retry 2 https://airvpn.org/api/whatismyip/)"
+   AIRVPN="$(curl -fs4 --retry 1 https://airvpn.org/api/whatismyip/)"
    NEWIP="$(jq -n "$AIRVPN" | jq -j .ip)"
    NEWCOUNTRY="$(jq -n "$AIRVPN" | jq -j .geo.code | tr 'a-z' 'A-Z')"
 fi
@@ -118,7 +118,7 @@ fi
 
 if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
    Print_Output "Can't retrieve IP Address from main source, trying failover..." "$ERR"
-   NEWIP="$(curl -fs4 -- retry 2 https://api4.my-ip.io/ip)" #failover
+   NEWIP="$(curl -fs4 -- retry 1 https://api4.my-ip.io/ip)" #failover
    NEWCOUNTRY="FAILOVER"
 fi
 if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
@@ -130,7 +130,7 @@ else
      if [ "$NEWIP" != "$CURRENTIP" ]; then
         UPDATE="$(curl -fs4 --retry 8 -u $USERNAME:$PASSWORD https://updates.dnsomatic.com/nic/update?hostname=$HOSTNAME\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip=$NEWIP)"
 		#if you need to curl another url to update another service, you can do it here, for example:
-		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP     
+		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
         if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
             if [ "$1" = "force" ]; then
                Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
