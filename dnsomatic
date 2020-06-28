@@ -7,6 +7,7 @@ APPNAME="DNSOMatic"
 APPNAMEnorm="$(echo $APPNAME | tr 'A-Z' 'a-z')"
 CFGdir="/jffs/addons/$APPNAMEnorm.d"
 CFG="${CFGdir}/settings.cfg"
+SCRIPTPATH="$(cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P)"
 readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
@@ -14,7 +15,7 @@ readonly PASS="\\e[32m"
 
 #set -x
 
-[ -f "/opt/bin/$APPNAMEnorm" ] || ln -s "$0" "/opt/bin/$APPNAMEnorm" >/dev/null 2>&1
+[ -f "/opt/bin/$APPNAMEnorm" ] || ln -s "$SCRIPTPATH/$0" "/opt/bin/$APPNAMEnorm" >/dev/null 2>&1
 
 if [ ! -f "$CFG" ]; then
     if [ ! -d "$CFGdir" ]; then
@@ -74,13 +75,14 @@ done
 [ "$missing" = 1 ] && exit 1
 
 #check if curl (for the sake of...) and jq exists
+FAILOVER=0
 for app in curl jq; do
   if ! (which "$app" >/dev/null 2>&1); then
       Print_Output "$app not found, installing..." "$CRIT"
       opkg install "$app" >/dev/null 2>&1
       if ! (which "$app" >/dev/null 2>&1); then
         Print_Output "Can't download $app, exiting as it is required..." "$CRIT"
-        exit 1
+        which jq >/dev/null 2>&1 || FAILOVER=1
       fi
   fi
 done
@@ -109,10 +111,12 @@ if [ "$1" = "force" ]; then
    setvar CURRENTCOUNTRY ""
 fi
 
+which curl >/dev/null 2>&1 || exit 1
+
 if [ -n "$2" ]; then
    NEWIP="$2"
    NEWCOUNTRY="$(echo "$3" | tr 'a-z' 'A-Z')"
-else
+elif [ "$FAILOVER" != 1 ]; then
    AIRVPN="$(curl -fs4 --retry 1 https://airvpn.org/api/whatismyip/)"
    NEWIP="$(jq -n "$AIRVPN" | jq -j .ip)"
    NEWCOUNTRY="$(jq -n "$AIRVPN" | jq -j .geo.code | tr 'a-z' 'A-Z')"
@@ -132,9 +136,10 @@ if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
    exit 1
 else
      if [ "$NEWIP" != "$CURRENTIP" ]; then
-        UPDATE="$(curl -fs4 --retry 8 -u $USERNAME:$PASSWORD https://updates.dnsomatic.com/nic/update?hostname=$HOSTNAME\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip=$NEWIP)"
-		#if you need to curl another url to update another service, you can do it here, for example:
-		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
+        UPDATE="$(curl -fs4 --retry 8 -u "$USERNAME":"$PASSWORD" https://updates.dnsomatic.com/nic/update?hostname="$HOSTNAME"\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip="$NEWIP")"
+        #if you need to curl another url to update another service, you can do it here, for example:
+        #curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
+		####
         if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
             if [ "$1" = "force" ]; then
                Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
@@ -148,7 +153,7 @@ else
         elif [ "$UPDATE" = "abuse" ]; then
             setvar CURRENTIP ""
             setvar CURRENTCOUNTRY ""
-	          setvar ABUSE 1
+            setvar ABUSE 1
             Print_Output "Abusing! Nothing updated. Next two crons will be skipped and next update forced" "$ERR"
         else
             setvar CURRENTIP ""
