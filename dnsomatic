@@ -72,6 +72,7 @@ for vars in USERNAME PASSWORD HOSTNAME; do
        Print_Output "Please use \"$APPNAMEnorm set $vars your_$(echo $vars | tr 'A-Z' 'a-z')\" before first run" "$CRIT"
     fi
 done
+
 [ "$missing" = 1 ] && exit 1
 
 #check if curl (for the sake of...) and jq exists
@@ -122,7 +123,7 @@ elif [ "$FAILOVER" != 1 ]; then
    NEWCOUNTRY="$(jq -n "$AIRVPN" | jq -j .geo.code | tr 'a-z' 'A-Z')"
 fi
 
-[ -z "$NEWCOUNTRY" ] && NEWCOUNTRY="EARTH"
+"${NEWCOUNTRY:=EARTH}"
 
 if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
    Print_Output "Can't retrieve IP Address from main source, trying failover..." "$ERR"
