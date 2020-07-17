@@ -39,8 +39,8 @@ else
 	else
 		if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" != "$(echo "$3" | grep -o -E '[0-9]+')" ] && [ "$ARG" != "status" ] && [ "$ARG" != "toggle" ] && [ "$ARG" != "restart" ]; then
 			if [ "$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')" != "$3" ]; then
-			ENTRY="$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')"
-			[ "$ARG" != "random" ] && echo "$CURRENTDESC: Forcing entry-ip $ENTRY to avoid connecting issues"
+				ENTRY="$(echo "$CURRENTSERVER" | grep -o -E '[0-9]+')"
+				[ "$ARG" != "random" ] && echo "$CURRENTDESC: Forcing entry-ip $ENTRY to avoid connecting issues"
 			fi
 		else
 			ENTRY="$(echo "$3" | grep -o -E '[0-9]+')"
