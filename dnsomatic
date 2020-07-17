@@ -162,7 +162,7 @@ else
 			Print_Output "Error while updating: \"$UPDATE\". Next update will be forced" "$ERR"
 		fi
 	else
-	[ "$PRINTNOTH" = 1 ] && Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
+		[ "$PRINTNOTH" = 1 ] && Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
 	fi
 fi
 
