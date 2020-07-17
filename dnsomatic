@@ -18,11 +18,11 @@ readonly PASS="\\e[32m"
 [ -f "/opt/bin/$APPNAMEnorm" ] || ln -s "$SCRIPTPATH/$0" "/opt/bin/$APPNAMEnorm" >/dev/null 2>&1
 
 if [ ! -f "$CFG" ]; then
-		if [ ! -d "$CFGdir" ]; then
-			 mkdir "$CFGdir"
-			 chmod 777 "$CFGdir"
-		fi
-		printf "" > "$CFG"
+	if [ ! -d "$CFGdir" ]; then
+		mkdir "$CFGdir"
+		chmod 777 "$CFGdir"
+	fi
+	printf "" > "$CFG"
 fi
 . "$CFG"
 
@@ -34,136 +34,136 @@ Print_Output(){
 
 #set vars / $1 = var name, $2 = value
 setvar(){
-		grep -q "$1=" < "$CFG" || printf "%s=\"\"\n" "$1" >> "$CFG"
-		sed -i "s/^$1=.*$/$1=\"$(echo "$2" | tr -d " ")\"/" "$CFG"
-		. "$CFG"
+	grep -q "$1=" < "$CFG" || printf "%s=\"\"\n" "$1" >> "$CFG"
+	sed -i "s/^$1=.*$/$1=\"$(echo "$2" | tr -d " ")\"/" "$CFG"
+	. "$CFG"
 }
 
 if [ "$1" = "config" ]; then
-		cat "$CFG"
-		exit 0
+	cat "$CFG"
+	exit 0
 fi
 
 if [ "$1" = "set" ]; then
-		if [ -n "$2" ] && [ -n "$3" ]; then
-			 setvar "$2" "$3"
-			 Print_Output "Setting \"$(echo "$2" | tr -d " ")=$(echo "$3" | tr -d " ")\"..."
-			 exit 0
-		else
-			 echo "Missing args"
-			 exit 1
-		fi
+	if [ -n "$2" ] && [ -n "$3" ]; then
+		setvar "$2" "$3"
+		Print_Output "Setting \"$(echo "$2" | tr -d " ")=$(echo "$3" | tr -d " ")\"..."
+		exit 0
+	else
+		echo "Missing args"
+		exit 1
+	fi
 fi
 
 if [ "$ABUSE" = "1" ]; then
-	 setvar ABUSE 2
-	 Print_Output "Last update was abusive, skipping this one..."
-	 exit 0
+	setvar ABUSE 2
+	Print_Output "Last update was abusive, skipping this one..."
+	exit 0
 elif [ "$ABUSE" = "2" ]; then
-	 setvar ABUSE 0
-	 Print_Output "Last update was abusive, skipping this one also..."
-	 exit 0
+	setvar ABUSE 0
+	Print_Output "Last update was abusive, skipping this one also..."
+	exit 0
 fi
 
 missing=0
 for vars in USERNAME PASSWORD HOSTNAME; do
-		if ! grep -q "$vars=" < "$CFG"; then
-			 missing=1
-			 Print_Output "Please use \"$APPNAMEnorm set $vars your_$(echo $vars | tr 'A-Z' 'a-z')\" before first run" "$CRIT"
-		fi
+	if ! grep -q "$vars=" < "$CFG"; then
+		missing=1
+		Print_Output "Please use \"$APPNAMEnorm set $vars your_$(echo $vars | tr 'A-Z' 'a-z')\" before first run" "$CRIT"
+	fi
 done
 
 [ "$missing" = 1 ] && exit 1
 
 #check if curl (for the sake of...) and jq exists
 FAILOVER=0
-for app in curl jq; do
-	if ! (which "$app" >/dev/null 2>&1); then
+	for app in curl jq; do
+		if ! (which "$app" >/dev/null 2>&1); then
 			Print_Output "$app not found, installing..." "$CRIT"
 			opkg install "$app" >/dev/null 2>&1
 			if ! (which "$app" >/dev/null 2>&1); then
 				Print_Output "Can't download $app, exiting as it is required..." "$CRIT"
 				which jq >/dev/null 2>&1 || FAILOVER=1
 			fi
-	fi
-done
+		fi
+	done
 
 if [ "$1" = "cron" ]; then
-	 if [ -z "$2" ] && [ -z "$RUNEACH" ]; then
+		if [ -z "$2" ] && [ -z "$RUNEACH" ]; then
 			Print_Output "Please use \"$APPNAMEnorm cron X\" where X is the number in minutes for cronjob" "$ERR"
 			exit 1
-	 elif [ -n "$2" ]; then
+		elif [ -n "$2" ]; then
 			setvar RUNEACH "$2"
-	 fi
-	 cru a "$APPNAME" "*/$RUNEACH * * * * $0"
-	 Print_Output "Creating cronjob to run every $RUNEACH minutes..." "$WARN"
-	 #setvar CURRENTIP ""
-	 #setvar CURRENTCOUNTRY ""
-	 exit 0
+		fi
+	cru a "$APPNAME" "*/$RUNEACH * * * * $0"
+	Print_Output "Creating cronjob to run every $RUNEACH minutes..." "$WARN"
+	#setvar CURRENTIP ""
+	#setvar CURRENTCOUNTRY ""
+	exit 0
 fi
 
 if [ "$1" = "init" ]; then
-	 Print_Output "Waiting 30 sec for first check..." "$WARN"
-	 sleep 30s
+	Print_Output "Waiting 30 sec for first check..." "$WARN"
+	sleep 30s
 fi
 
 if [ "$1" = "force" ]; then
-	 setvar CURRENTIP ""
-	 setvar CURRENTCOUNTRY ""
+	setvar CURRENTIP ""
+	setvar CURRENTCOUNTRY ""
 fi
 
 which curl >/dev/null 2>&1 || exit 1
 
 if [ -n "$2" ]; then
-	 NEWIP="$2"
-	 NEWCOUNTRY="$(echo "$3" | tr 'a-z' 'A-Z')"
+	NEWIP="$2"
+	NEWCOUNTRY="$(echo "$3" | tr 'a-z' 'A-Z')"
 elif [ "$FAILOVER" != 1 ]; then
-	 AIRVPN="$(curl -fs4 --retry 1 https://airvpn.org/api/whatismyip/)"
-	 NEWIP="$(jq -n "$AIRVPN" | jq -j .ip)"
-	 NEWCOUNTRY="$(jq -n "$AIRVPN" | jq -j .geo.code | tr 'a-z' 'A-Z')"
+	AIRVPN="$(curl -fs4 --retry 1 https://airvpn.org/api/whatismyip/)"
+	NEWIP="$(jq -n "$AIRVPN" | jq -j .ip)"
+	NEWCOUNTRY="$(jq -n "$AIRVPN" | jq -j .geo.code | tr 'a-z' 'A-Z')"
 fi
 
-"${NEWCOUNTRY:=EARTH}"
+"${NEWCOUNTRY:=EARTH}" #expand if newcountry is empty
 
 if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
-	 Print_Output "Can't retrieve IP Address from main source, trying failover..." "$ERR"
-	 NEWIP="$(curl -fs4 -- retry 1 https://api4.my-ip.io/ip)" #failover
-	 NEWCOUNTRY="FAILOVER"
+	Print_Output "Can't retrieve IP Address from main source, trying failover..." "$ERR"
+	NEWIP="$(curl -fs4 -- retry 1 https://api4.my-ip.io/ip)" #failover
+	NEWCOUNTRY="FAILOVER"
 fi
 if [ -z "$NEWIP" ] || [ "$NEWIP" = "null" ]; then
-	 setvar CURRENTIP ""
-	 setvar CURRENTCOUNTRY ""
-	 Print_Output "Can't retrieve IP Address, stopping..." "$ERR"
-	 exit 1
+	setvar CURRENTIP ""
+	setvar CURRENTCOUNTRY ""
+	Print_Output "Can't retrieve IP Address, stopping..." "$ERR"
+	exit 1
 else
-		 if [ "$NEWIP" != "$CURRENTIP" ]; then
-				UPDATE="$(curl -fs4 --retry 8 -u "$USERNAME":"$PASSWORD" https://updates.dnsomatic.com/nic/update?hostname="$HOSTNAME"\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip="$NEWIP")"
-				#if you need to curl another url to update another service, you can do it here, for example:
-				#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
+	if [ "$NEWIP" != "$CURRENTIP" ]; then
+		UPDATE="$(curl -fs4 --retry 8 -u "$USERNAME":"$PASSWORD" https://updates.dnsomatic.com/nic/update?hostname="$HOSTNAME"\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip="$NEWIP")"
+		#if you need to curl another url to update another service, you can do it here, for example:
+		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
 		####
-				if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
-						if [ "$1" = "force" ]; then
-							 Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
-						elif [ -z "$CURRENTIP" ]; then
-							 Print_Output "Updating IP to $NEWIP/$NEWCOUNTRY" "$PASS"
-						else
-							 Print_Output "Updating IP from $CURRENTIP/$CURRENTCOUNTRY to $NEWIP/$NEWCOUNTRY" "$PASS"
-						fi
-						setvar CURRENTIP "$NEWIP"
-						setvar CURRENTCOUNTRY "$NEWCOUNTRY"
-				elif [ "$UPDATE" = "abuse" ]; then
-						setvar CURRENTIP ""
-						setvar CURRENTCOUNTRY ""
-						setvar ABUSE 1
-						Print_Output "Abusing! Nothing updated. Next two crons will be skipped and next update forced" "$ERR"
-				else
-						setvar CURRENTIP ""
-						setvar CURRENTCOUNTRY ""
-						Print_Output "Error while updating: \"$UPDATE\". Next update will be forced" "$ERR"
-				fi
+		if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
+			if [ "$1" = "force" ]; then
+				Print_Output "Forcing IP update to $NEWIP/$NEWCOUNTRY" "$PASS"
+			elif [ -z "$CURRENTIP" ]; then
+				Print_Output "Updating IP to $NEWIP/$NEWCOUNTRY" "$PASS"
+			else
+				Print_Output "Updating IP from $CURRENTIP/$CURRENTCOUNTRY to $NEWIP/$NEWCOUNTRY" "$PASS"
+			fi
+			setvar CURRENTIP "$NEWIP"
+			setvar CURRENTCOUNTRY "$NEWCOUNTRY"
+		elif [ "$UPDATE" = "abuse" ]; then
+			setvar CURRENTIP ""
+			setvar CURRENTCOUNTRY ""
+			setvar ABUSE 1
+			Print_Output "Abusing! Nothing updated. Next two crons will be skipped and next update forced" "$ERR"
 		else
-				[ "$PRINTNOTH" = 1 ] && Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
+			setvar CURRENTIP ""
+			setvar CURRENTCOUNTRY ""
+			Print_Output "Error while updating: \"$UPDATE\". Next update will be forced" "$ERR"
 		fi
+	else
+	[ "$PRINTNOTH" = 1 ] && Print_Output "Nothing to update. Current IP: $CURRENTIP/$CURRENTCOUNTRY" "$PASS"
+	fi
 fi
 
 exit 0
