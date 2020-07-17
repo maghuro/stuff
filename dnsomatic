@@ -77,16 +77,16 @@ done
 
 #check if curl (for the sake of...) and jq exists
 FAILOVER=0
-	for app in curl jq; do
+for app in curl jq; do
+	if ! (which "$app" >/dev/null 2>&1); then
+		Print_Output "$app not found, installing..." "$CRIT"
+		opkg install "$app" >/dev/null 2>&1
 		if ! (which "$app" >/dev/null 2>&1); then
-			Print_Output "$app not found, installing..." "$CRIT"
-			opkg install "$app" >/dev/null 2>&1
-			if ! (which "$app" >/dev/null 2>&1); then
-				Print_Output "Can't download $app, exiting as it is required..." "$CRIT"
-				which jq >/dev/null 2>&1 || FAILOVER=1
-			fi
+			Print_Output "Can't download $app, exiting as it is required..." "$CRIT"
+			which jq >/dev/null 2>&1 || FAILOVER=1
 		fi
-	done
+	fi
+done
 
 if [ "$1" = "cron" ]; then
 		if [ -z "$2" ] && [ -z "$RUNEACH" ]; then
