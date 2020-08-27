@@ -46,13 +46,28 @@ fi
 
 if [ "$1" = "set" ]; then
 	if [ -n "$2" ] && [ -n "$3" ]; then
-		setvar "$2" "$3"
-		Print_Output "Setting \"$(echo "$2" | tr -d " ")=$(echo "$3" | tr -d " ")\"..."
+    var="$(echo $2 | tr 'a-z' 'A-Z')"
+		setvar "$var" "$3"
+		Print_Output "Setting \"$(echo "$var" | tr -d " ")=$(echo "$3" | tr -d " ")\"..."
 		exit 0
 	else
 		echo "Missing args"
 		exit 1
 	fi
+fi
+
+if [ "$1" = "cron" ]; then
+		if [ -z "$2" ] && [ -z "$RUNEACH" ]; then
+			Print_Output "Please use \"$APPNAMEnorm cron X\" where X is the number in minutes for cronjob" "$ERR"
+			exit 1
+		elif [ -n "$2" ]; then
+			setvar RUNEACH "$2"
+		fi
+	cru a "$APPNAME" "*/$RUNEACH * * * * $0"
+	Print_Output "Creating cronjob to run every $RUNEACH minutes..." "$WARN"
+  shift 2
+  cru a ${APPNAME}_first "$(date -D '%s' +'%M %H %d %m %a' -d $(($(date +%s)+200))) $0"
+	exit 0
 fi
 
 if [ "$ABUSE" = "1" ]; then
@@ -87,20 +102,6 @@ for app in curl jq; do
 		fi
 	fi
 done
-
-if [ "$1" = "cron" ]; then
-		if [ -z "$2" ] && [ -z "$RUNEACH" ]; then
-			Print_Output "Please use \"$APPNAMEnorm cron X\" where X is the number in minutes for cronjob" "$ERR"
-			exit 1
-		elif [ -n "$2" ]; then
-			setvar RUNEACH "$2"
-		fi
-	cru a "$APPNAME" "*/$RUNEACH * * * * $0"
-	Print_Output "Creating cronjob to run every $RUNEACH minutes..." "$WARN"
-	#setvar CURRENTIP ""
-	#setvar CURRENTCOUNTRY ""
-	exit 0
-fi
 
 if [ "$1" = "init" ]; then
 	Print_Output "Waiting 30 sec for first check..." "$WARN"
@@ -139,7 +140,7 @@ else
 	if [ "$NEWIP" != "$CURRENTIP" ]; then
 		UPDATE="$(curl -fs4 --retry 8 -u "$USERNAME":"$PASSWORD" https://updates.dnsomatic.com/nic/update?hostname="$HOSTNAME"\&wildcard=NOCHG\&mx=NOCHG\&backmx=NOCHG\&myip="$NEWIP")"
 		#if you need to curl another url to update another service, you can do it here, for example:
-		#curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
+    #curl -fs4 --retry 8 "https://link-ip.nextdns.io/confid/presharedkey" -o /dev/null #NextDNS linked IP
 		####
 		if [ "$UPDATE" = "good $NEWIP" ] || [ "$UPDATE" = "nochg $NEWIP" ]; then
 			if [ "$1" = "force" ]; then
