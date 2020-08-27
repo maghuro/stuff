@@ -46,7 +46,7 @@ fi
 
 if [ "$1" = "set" ]; then
 	if [ -n "$2" ] && [ -n "$3" ]; then
-    var="$(echo $2 | tr 'a-z' 'A-Z')"
+		var="$(echo $2 | tr 'a-z' 'A-Z')"
 		setvar "$var" "$3"
 		Print_Output "Setting \"$(echo "$var" | tr -d " ")=$(echo "$3" | tr -d " ")\"..."
 		exit 0
@@ -65,7 +65,7 @@ if [ "$1" = "cron" ]; then
 		fi
 	cru a "$APPNAME" "*/$RUNEACH * * * * $0"
 	Print_Output "Creating cronjob to run every $RUNEACH minutes..." "$WARN"
-  #shift 2
+	#shift 2
 	cru a ${APPNAME}_first "$(date -D '%s' +'%M %H %d %m %a' -d $(($(date +%s)+200))) $0"
 	exit 0
 fi
